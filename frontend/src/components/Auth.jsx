@@ -108,9 +108,3 @@ export const Login = () => {
   );
 };
 
-const Auth = {
-  Register,
-  Login
-};
-
-export default Auth;
