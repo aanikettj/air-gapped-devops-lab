@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Amazon-Style E-Commerce Platform
 
 A full-stack e-commerce application built with React, Node.js, Express, and PostgreSQL. Features product browsing, shopping cart management, user authentication, and order processing.
@@ -243,3 +244,6 @@ Feel free to submit issues and enhancement requests!
 ---
 
 **Built with ❤️ using React, Node.js, and PostgreSQL**
+=======
+# air-gapped-devops-lab
+>>>>>>> 6ce42dc26fbfe8eec9e970f23477de6f5b23a901
