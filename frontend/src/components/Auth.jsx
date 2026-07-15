@@ -27,14 +27,22 @@ export const Register = () => {
     formData.email,
     formData.password
   );
+
   setSuccess('Registration successful! Please login.');
-  setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+  setFormData({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+
 } catch (err) {
   setError(err.response?.data?.message || 'Registration failed');
 }
-  );
 
-  return (
+};
+
+return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h1 className="text-3xl font-bold mb-6 text-center">Register</h1>
