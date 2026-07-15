@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { authAPI } from '../api/client.js';
 import { setUser, setToken } from '../redux/authReducer.js';
 
@@ -22,13 +22,16 @@ export const Register = () => {
     }
 
     try {
-      const response = await authAPI.register(formData.name, formData.email, formData.password);
-      setSuccess('Registration successful! Please login.');
-      setFormData({ name: '', email: '', password: '', confirmPassword: '' });
-    } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
-    }
-  };
+  await authAPI.register(
+    formData.name,
+    formData.email,
+    formData.password
+  );
+  setSuccess('Registration successful! Please login.');
+  setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+} catch (err) {
+  setError(err.response?.data?.message || 'Registration failed');
+}
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -105,4 +108,9 @@ export const Login = () => {
   );
 };
 
-export default { Register, Login };
+const Auth = {
+  Register,
+  Login
+};
+
+export default Auth;
