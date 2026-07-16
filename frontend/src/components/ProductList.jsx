@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { productAPI, cartAPI } from '../api/client.js';
-import { setCart, addItemToCart } from '../redux/cartReducer.js';
+import { setCart } from '../redux/cartReducer.js';
 
 export const ProductList = () => {
   const [products, setProducts] = useState([]);
@@ -13,29 +13,29 @@ export const ProductList = () => {
   const { token } = useSelector(state => state.auth);
 
   useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await productAPI.getCategories();
+        setCategories(response.data.categories);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const response = await productAPI.getProducts(selectedCategory, searchTerm);
+        setProducts(response.data.products);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+      setLoading(false);
+    };
+
     fetchCategories();
     fetchProducts();
   }, [selectedCategory, searchTerm]);
-
-  const fetchCategories = async () => {
-    try {
-      const response = await productAPI.getCategories();
-      setCategories(response.data.categories);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  };
-
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      const response = await productAPI.getProducts(selectedCategory, searchTerm);
-      setProducts(response.data.products);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-    }
-    setLoading(false);
-  };
 
   const handleAddToCart = async (productId) => {
     if (!token) {

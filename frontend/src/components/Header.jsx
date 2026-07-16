@@ -49,19 +49,21 @@ export const Orders = () => {
   const { token } = useSelector(state => state.auth);
 
   useEffect(() => {
-    if (token) {
-      fetchOrders();
+    if (!token) {
+      return;
     }
-  }, [token]);
 
-  const fetchOrders = async () => {
-    try {
-      const response = await orderAPI.getOrders();
-      setOrders(response.data.orders);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-    }
-  };
+    const fetchOrders = async () => {
+      try {
+        const response = await orderAPI.getOrders();
+        setOrders(response.data.orders);
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      }
+    };
+
+    fetchOrders();
+  }, [token]);
 
   const handleSelectOrder = async (orderId) => {
     try {
@@ -171,4 +173,3 @@ export const Orders = () => {
   );
 };
 
-export default { Header, Orders };

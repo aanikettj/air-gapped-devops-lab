@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { orderAPI, cartAPI } from '../api/client.js';
+import { orderAPI } from '../api/client.js';
 import { clearCartAction } from '../redux/cartReducer.js';
 
 export const Checkout = () => {

@@ -9,19 +9,21 @@ export const Cart = () => {
   const { token } = useSelector(state => state.auth);
 
   useEffect(() => {
-    if (token) {
-      fetchCart();
+    if (!token) {
+      return;
     }
-  }, [token]);
 
-  const fetchCart = async () => {
-    try {
-      const response = await cartAPI.getCart();
-      dispatch(setCart(response.data.cart.items, response.data.cart.total));
-    } catch (error) {
-      console.error('Error fetching cart:', error);
-    }
-  };
+    const fetchCart = async () => {
+      try {
+        const response = await cartAPI.getCart();
+        dispatch(setCart(response.data.cart.items, response.data.cart.total));
+      } catch (error) {
+        console.error('Error fetching cart:', error);
+      }
+    };
+
+    fetchCart();
+  }, [token, dispatch]);
 
   const handleRemoveItem = async (cartItemId) => {
     try {

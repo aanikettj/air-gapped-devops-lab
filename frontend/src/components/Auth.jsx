@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { authAPI } from '../api/client.js';
 import { setUser, setToken } from '../redux/authReducer.js';
 
@@ -7,7 +7,6 @@ export const Register = () => {
   const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const dispatch = useDispatch();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,15 +21,27 @@ export const Register = () => {
     }
 
     try {
-      const response = await authAPI.register(formData.name, formData.email, formData.password);
-      setSuccess('Registration successful! Please login.');
-      setFormData({ name: '', email: '', password: '', confirmPassword: '' });
-    } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
-    }
-  };
+  await authAPI.register(
+    formData.name,
+    formData.email,
+    formData.password
+  );
 
-  return (
+  setSuccess('Registration successful! Please login.');
+  setFormData({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+
+} catch (err) {
+  setError(err.response?.data?.message || 'Registration failed');
+}
+
+};
+
+return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h1 className="text-3xl font-bold mb-6 text-center">Register</h1>
@@ -104,5 +115,3 @@ export const Login = () => {
     </div>
   );
 };
-
-export default { Register, Login };
