@@ -1,60 +1,170 @@
 pipeline {
-  agent any
-  environment {
-    REGISTRY = 'ghcr.io/REPLACE_OWNER' // change to your registry
-    REPO = 'air-gapped-devops-lab'    // change to your repo name
-    IMAGE_TAG = "${env.BUILD_NUMBER}-${env.GIT_COMMIT ?: 'local'}"
-  }
+    agent any
 
-  stages {
-    stage('Checkout') {
-      steps {
-        checkout scm
-      }
+    tools {
+        nodejs 'NodeJS'
+        jdk 'jdk21'
+        maven 'Maven'
     }
 
-    stage('Build & Push Backend') {
-      steps {
-        dir('backend') {
-          sh 'docker build -t $REGISTRY/$REPO-backend:$IMAGE_TAG .' 
-          withCredentials([usernamePassword(credentialsId: 'registry-cred', usernameVariable: 'REG_USER', passwordVariable: 'REG_PASS')]) {
-            sh 'echo $REG_PASS | docker login ghcr.io -u $REG_USER --password-stdin'
-            sh 'docker push $REGISTRY/$REPO-backend:$IMAGE_TAG'
-          }
+    environment {
+        REGISTRY = '192.168.72.133'
+        PROJECT = 'devops'
+        TAG = "${BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/aanikettj/air-gapped-devops-lab.git'
+            }
         }
-      }
-    }
 
-    stage('Build & Push Frontend') {
-      steps {
-        dir('frontend') {
-          sh 'docker build -t $REGISTRY/$REPO-frontend:$IMAGE_TAG .' 
-          withCredentials([usernamePassword(credentialsId: 'registry-cred', usernameVariable: 'REG_USER', passwordVariable: 'REG_PASS')]) {
-            sh 'echo $REG_PASS | docker login ghcr.io -u $REG_USER --password-stdin'
-            sh 'docker push $REGISTRY/$REPO-frontend:$IMAGE_TAG'
-          }
+        stage('Verify Repository') {
+            steps {
+                bat 'dir'
+                bat 'dir frontend'
+                bat 'dir backend'
+            }
         }
-      }
-    }
 
-    stage('Deploy to Kubernetes') {
-      when {
-        expression { return env.DEPLOY == 'true' }
-      }
-      steps {
-        withCredentials([file(credentialsId: 'kubeconfig-file', variable: 'KUBECONFIG_FILE')]) {
-          sh 'export KUBECONFIG=$KUBECONFIG_FILE'
-          sh 'kubectl set image deployment/backend backend=$REGISTRY/$REPO-backend:$IMAGE_TAG --record || true'
-          sh 'kubectl set image deployment/frontend frontend=$REGISTRY/$REPO-frontend:$IMAGE_TAG --record || true'
-          sh 'kubectl apply -f k8s/'
+        stage('Frontend Install') {
+            steps {
+                dir('frontend') {
+                    bat 'npm ci'
+                }
+            }
         }
-      }
-    }
-  }
 
-  post {
-    always {
-      cleanWs()
+        stage('Frontend Build') {
+            steps {
+                dir('frontend') {
+                    bat 'set CI=false && npm run build'
+                }
+            }
+        }
+
+        stage('Backend Install') {
+            steps {
+                dir('backend') {
+                    bat 'npm ci'
+                }
+            }
+        }
+
+        stage('Backend Test') {
+            steps {
+                dir('backend') {
+                    bat 'npm test'
+                }
+            }
+        }
+
+        stage('Docker Login Harbor') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'harbor-creds',
+                        usernameVariable: 'HARBOR_USER',
+                        passwordVariable: 'HARBOR_PASS'
+                    )
+                ]) {
+                    bat '''
+                    echo %HARBOR_PASS% | docker login %REGISTRY% -u %HARBOR_USER% --password-stdin
+                    '''
+                }
+            }
+        }
+
+        stage('Build Backend Image') {
+            steps {
+                dir('backend') {
+                    bat '''
+                    docker build -t %REGISTRY%/%PROJECT%/backend:%TAG% .
+                    '''
+                }
+            }
+        }
+
+        stage('Build Frontend Image') {
+            steps {
+                dir('frontend') {
+                    bat '''
+                    docker build -t %REGISTRY%/%PROJECT%/frontend:%TAG% .
+                    '''
+                }
+            }
+        }
+
+        stage('Push Backend Image') {
+            steps {
+                bat '''
+                docker push %REGISTRY%/%PROJECT%/backend:%TAG%
+                '''
+            }
+        }
+
+        stage('Push Frontend Image') {
+            steps {
+                bat '''
+                docker push %REGISTRY%/%PROJECT%/frontend:%TAG%
+                '''
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                sshagent(credentials: ['master-ssh']) {
+                    bat '''
+                    ssh -o StrictHostKeyChecking=no root@192.168.72.131 "kubectl apply -f /home/master/air-gapped-devops-lab/k8s/"
+                    '''
+                }
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                sshagent(credentials: ['master-ssh']) {
+                    bat '''
+                    ssh -o StrictHostKeyChecking=no root@192.168.72.131 "kubectl get pods && kubectl get svc && kubectl get deployment"
+                    '''
+                }
+            }
+        }
     }
-  }
+
+    post {
+        success {
+            emailext(
+                subject: "SUCCESS : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """
+Build Successful
+
+Job : ${env.JOB_NAME}
+
+Build Number : ${env.BUILD_NUMBER}
+
+Build URL : ${env.BUILD_URL}
+""",
+                to: 'niketjadhav7007@gmail.com'
+            )
+        }
+
+        failure {
+            emailext(
+                subject: "FAILED : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """
+Build Failed
+
+Job : ${env.JOB_NAME}
+
+Build Number : ${env.BUILD_NUMBER}
+
+Build URL : ${env.BUILD_URL}
+""",
+                to: 'niketjadhav7007@gmail.com'
+            )
+        }
+    }
 }
