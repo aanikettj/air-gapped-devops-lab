@@ -8,12 +8,13 @@ pipeline {
     }
 
     environment {
-        REGISTRY = '192.168.72.133'
+        REGISTRY = '192.168.72.131'
         PROJECT = 'devops'
-        TAG = "${BUILD_NUMBER}"
+        TAG = 'latest'
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 git branch: 'main',
@@ -32,7 +33,7 @@ pipeline {
         stage('Frontend Install') {
             steps {
                 dir('frontend') {
-                    bat 'npm ci'
+                    bat 'npm install'
                 }
             }
         }
@@ -48,7 +49,7 @@ pipeline {
         stage('Backend Install') {
             steps {
                 dir('backend') {
-                    bat 'npm ci'
+                    bat 'npm install'
                 }
             }
         }
@@ -71,7 +72,8 @@ pipeline {
                     )
                 ]) {
                     bat '''
-                    echo %HARBOR_PASS% | docker login %REGISTRY% -u %HARBOR_USER% --password-stdin
+                    docker logout %REGISTRY%
+                    (echo|set /p="%HARBOR_PASS%") | docker login %REGISTRY% -u %HARBOR_USER% --password-stdin
                     '''
                 }
             }
@@ -115,21 +117,21 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                sshagent(credentials: ['master-ssh']) {
-                    bat '''
-                    ssh -o StrictHostKeyChecking=no root@192.168.72.131 "kubectl apply -f /home/master/air-gapped-devops-lab/k8s/"
-                    '''
-                }
+                bat '''
+                ssh -o StrictHostKeyChecking=no root@192.168.72.133 "kubectl apply -f /home/master/air-gapped-devops-lab/k8s/"
+                ssh -o StrictHostKeyChecking=no root@192.168.72.133 "kubectl rollout restart deployment backend"
+                ssh -o StrictHostKeyChecking=no root@192.168.72.133 "kubectl rollout restart deployment frontend"
+                '''
             }
         }
 
         stage('Verify Deployment') {
             steps {
-                sshagent(credentials: ['master-ssh']) {
-                    bat '''
-                    ssh -o StrictHostKeyChecking=no root@192.168.72.131 "kubectl get pods && kubectl get svc && kubectl get deployment"
-                    '''
-                }
+                bat '''
+                ssh -o StrictHostKeyChecking=no root@192.168.72.133 "kubectl get pods"
+                ssh -o StrictHostKeyChecking=no root@192.168.72.133 "kubectl get svc"
+                ssh -o StrictHostKeyChecking=no root@192.168.72.133 "kubectl get deployment"
+                '''
             }
         }
     }
