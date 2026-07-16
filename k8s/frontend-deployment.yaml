@@ -14,6 +14,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: harbor.example.com/your-harbor-project/ecommerce-frontend:latest
+          image: 192.168.72.131/devops/frontend:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
