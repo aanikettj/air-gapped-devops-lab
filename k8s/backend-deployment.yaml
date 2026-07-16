@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
         - name: backend
-          image: harbor.example.com/your-harbor-project/ecommerce-backend:latest
+          image: image: 192.168.72.131/devops/backend:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5000
           env:
