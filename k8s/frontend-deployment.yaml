@@ -22,7 +22,7 @@ spec:
 
       containers:
         - name: frontend
-          image: 192.168.72.131/devops/frontend:latest
+          image: 192.168.72.131/devops2/frontend:latest
           imagePullPolicy: Always
 
           ports:
