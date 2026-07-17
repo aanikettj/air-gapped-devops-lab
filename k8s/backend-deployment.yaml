@@ -1,32 +1,46 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: backend
+
 spec:
   replicas: 1
+
   selector:
     matchLabels:
       app: backend
+
   template:
     metadata:
       labels:
         app: backend
+
     spec:
+      imagePullSecrets:
+        - name: harbor-secret
+
       containers:
         - name: backend
-          image: image: 192.168.72.131/devops/backend:latest
+          image: 192.168.72.131/devops/backend:latest
           imagePullPolicy: Always
+
           ports:
             - containerPort: 5000
+
           env:
             - name: DB_HOST
-              value: "REPLACE_DB_HOST"
+              value: REPLACE_DB_HOST
+
             - name: DB_PORT
               value: "5432"
+
             - name: DB_NAME
-              value: "db_2"
+              value: db_2
+
             - name: DB_USER
-              value: "postgres"
+              value: postgres
+
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
