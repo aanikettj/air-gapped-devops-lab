@@ -22,7 +22,7 @@ spec:
 
       containers:
         - name: backend
-          image: 192.168.72.131/devops/backend:latest
+          image: 192.168.72.131/devops2/backend:latest
           imagePullPolicy: Always
 
           ports:
