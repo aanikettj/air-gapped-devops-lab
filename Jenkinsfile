@@ -119,8 +119,8 @@ pipeline {
             steps {
                 bat '''
                 ssh -o StrictHostKeyChecking=no root@192.168.72.133 "kubectl apply -f /home/master/air-gapped-devops-lab/k8s/"
-                ssh -o StrictHostKeyChecking=no root@192.168.72.133 "kubectl rollout restart deployment backend"
-                ssh -o StrictHostKeyChecking=no root@192.168.72.133 "kubectl rollout restart deployment frontend"
+                ssh -o StrictHostKeyChecking=no root@192.168.72.133 "kubectl rollout status deployment backend --timeout=120s"
+                ssh -o StrictHostKeyChecking=no root@192.168.72.133 "kubectl rollout status deployment frontend --timeout=120s"
                 '''
             }
         }
