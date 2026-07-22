@@ -90,14 +90,14 @@ pipeline {
         }
 
         stage('Build Frontend Image') {
-            steps {
-                dir('frontend') {
-                    bat '''
-                    docker build -t %REGISTRY%/%PROJECT%/frontend:%TAG% .
-                    '''
-                }
-            }
+    steps {
+        dir('frontend') {
+            bat '''
+            docker build --build-arg REACT_APP_API_URL=http://192.168.72.133:31099 -t %REGISTRY%/%PROJECT%/frontend:%TAG% .
+            '''
         }
+    }
+}
 
         stage('Push Backend Image') {
             steps {
